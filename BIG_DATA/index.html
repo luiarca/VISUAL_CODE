@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATASTORE S.A.C. | Dashboard Empresarial</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.3/papaparse.min.js"></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🛒</div>
+      <div>
+        <h1>DATASTORE S.A.C.</h1>
+        <span>Dashboard Empresarial</span>
+      </div>
+    </div>
+    <div class="user-status">● Administrador · En línea</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <button class="nav-item active" data-section="inicio">⌂ <span>Inicio</span></button>
+        <button class="nav-item" data-section="resumen">▣ <span>Resumen</span></button>
+        <button class="nav-item" data-section="periodo">◷ <span>Ventas por período</span></button>
+        <button class="nav-item" data-section="categoria">▥ <span>Ventas por categoría</span></button>
+        <button class="nav-item" data-section="productos">▦ <span>Productos</span></button>
+        <button class="nav-item" data-section="sedes">⌖ <span>Sedes / Ciudades</span></button>
+        <button class="nav-item" data-section="analisis">◈ <span>Análisis</span></button>
+        <button class="nav-item" data-section="reportes">▤ <span>Reportes</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <label class="upload-button">
+          📁 Cargar ventas.csv
+          <input id="csvFile" type="file" accept=".csv">
+        </label>
+        <small id="fileStatus">Sin archivo cargado</small>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="page-heading">
+        <div>
+          <h2>Dashboard Empresarial</h2>
+          <p>Análisis y visualización de ventas - DATASTORE S.A.C.</p>
+        </div>
+
+        <div class="filters">
+          <label>Año
+            <select id="yearFilter"><option value="all">Todos</option></select>
+          </label>
+          <label>Mes
+            <select id="monthFilter">
+              <option value="all">Todos</option>
+              <option value="1">Enero</option><option value="2">Febrero</option>
+              <option value="3">Marzo</option><option value="4">Abril</option>
+              <option value="5">Mayo</option><option value="6">Junio</option>
+              <option value="7">Julio</option><option value="8">Agosto</option>
+              <option value="9">Septiembre</option><option value="10">Octubre</option>
+              <option value="11">Noviembre</option><option value="12">Diciembre</option>
+            </select>
+          </label>
+          <label>Ciudad / Sede
+            <select id="locationFilter"><option value="all">Todos</option></select>
+          </label>
+          <button id="applyFilters" class="primary-btn">🔎 Aplicar</button>
+        </div>
+      </section>
+
+      <section class="kpis">
+        <article class="kpi"><span>💰 Total de ventas</span><strong id="totalSales">S/ 0.00</strong><small>Importe acumulado</small></article>
+        <article class="kpi"><span>🧾 Transacciones</span><strong id="transactions">0</strong><small>Registros procesados</small></article>
+        <article class="kpi"><span>📦 Productos vendidos</span><strong id="productsSold">0</strong><small>Unidades</small></article>
+        <article class="kpi"><span>🏆 Producto más vendido</span><strong id="topProduct">—</strong><small id="topProductShare">—</small></article>
+        <article class="kpi"><span>📍 Sede con mayor venta</span><strong id="topLocation">—</strong><small id="topLocationShare">—</small></article>
+      </section>
+
+      <section id="inicio" class="section active-section">
+        <div class="chart-grid">
+          <article class="card wide"><h3>📅 Ventas por mes</h3><canvas id="monthlyChart"></canvas></article>
+          <article class="card"><h3>🗂️ Ventas por categoría</h3><canvas id="categoryChart"></canvas></article>
+          <article class="card"><h3>📦 Productos más vendidos</h3><canvas id="topProductsChart"></canvas></article>
+          <article class="card"><h3>📉 Productos menos vendidos</h3><canvas id="bottomProductsChart"></canvas></article>
+          <article class="card"><h3>📍 Ventas por sede / ciudad</h3><canvas id="locationChart"></canvas></article>
+          <article class="card"><h3>🥧 Productos por categoría</h3><canvas id="categoryQuantityChart"></canvas></article>
+          <article class="card"><h3>📊 Comparación de sedes</h3><canvas id="locationCompareChart"></canvas></article>
+          <article class="card"><h3>📈 Evolución de ventas</h3><canvas id="evolutionChart"></canvas></article>
+        </div>
+      </section>
+
+      <section id="resumen" class="section">
+        <div class="two-columns">
+          <article class="card">
+            <h3>Resumen general</h3>
+            <div id="summaryTable"></div>
+          </article>
+          <article class="card">
+            <h3>Top 5 Productos</h3>
+            <div id="topFiveTable"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="periodo" class="section">
+        <article class="card">
+          <h3>Ventas por período</h3>
+          <div id="periodTable"></div>
+        </article>
+      </section>
+
+      <section id="categoria" class="section">
+        <article class="card">
+          <h3>Ventas por categoría</h3>
+          <div id="categoryTable"></div>
+        </article>
+      </section>
+
+      <section id="productos" class="section">
+        <div class="two-columns">
+          <article class="card"><h3>Productos más vendidos</h3><div id="productsTopTable"></div></article>
+          <article class="card"><h3>Productos menos vendidos</h3><div id="productsBottomTable"></div></article>
+        </div>
+      </section>
+
+      <section id="sedes" class="section">
+        <article class="card">
+          <h3>Ventas por sede / ciudad</h3>
+          <div id="locationsTable"></div>
+        </article>
+      </section>
+
+      <section id="analisis" class="section">
+        <div id="analysisCards"></div>
+      </section>
+
+      <section id="reportes" class="section">
+        <article class="card">
+          <h3>📄 Reporte de análisis</h3>
+          <p>El reporte resume los indicadores y resultados obtenidos a partir de los datos cargados.</p>
+          <button id="downloadReport" class="primary-btn">⬇️ Descargar reporte CSV</button>
+        </article>
+      </section>
+
+      <footer>DATASTORE S.A.C. | Dashboard Empresarial de Ventas | Proyecto Big Data</footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+const state={rows:[],filtered:[],charts:{},mapping:{},headers:[]};
+const months=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+const aliases={
+ date:["fecha","date","fecha venta","fecha_venta","datetime"],
+ product:["producto","product","nombre producto","nombre_producto","articulo","artículo"],
+ category:["categoria","categoría","category","tipo","linea","línea","familia"],
+ quantity:["cantidad","quantity","unidades","units","cantidad vendida","cantidad_vendida","qty"],
+ amount:["venta","ventas","importe","monto","total","precio total","precio_total","amount","sales","valor venta","valor_venta","precio","price"],
+ location:["ciudad","city","sede","sede ciudad","sede_ciudad","local","ubicacion","ubicación","location"]
+};
+
+function norm(v){return String(v??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+function parseNumber(v){
+ if(v===null||v===undefined||v==="")return 0;
+ if(typeof v==="number")return v;
+ let s=String(v).trim().replace(/S\/|S\\|\$|\s/g,"");
+ if(s.includes(",")&&s.includes(".")){
+   if(s.lastIndexOf(",")>s.lastIndexOf("."))s=s.replace(/\./g,"").replace(",",".");
+   else s=s.replace(/,/g,"");
+ }else if(s.includes(",")){
+   const p=s.split(",");
+   s=p[p.length-1].length<=2?p.slice(0,-1).join("")+"."+p[p.length-1]:s.replace(/,/g,"");
+ }
+ return Number(s)||0;
+}
+function parseDate(v){
+ const s=String(v??"").trim();
+ if(!s)return null;
+ let d=new Date(s);
+ if(!isNaN(d))return d;
+ const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+ return m?new Date(+m[3],+m[2]-1,+m[1]):null;
+}
+function detect(headers,key){
+ const ns=headers.map(h=>({raw:h,n:norm(h)}));
+ for(const a of aliases[key]){const hit=ns.find(x=>x.n===norm(a));if(hit)return hit.raw}
+ for(const a of aliases[key]){const hit=ns.find(x=>x.n.includes(norm(a))||norm(a).includes(x.n));if(hit)return hit.raw}
+ return null;
+}
+function prepare(rows){
+ const headers=Object.keys(rows[0]||{});
+ const mapping={};
+ Object.keys(aliases).forEach(k=>mapping[k]=detect(headers,k));
+ state.mapping=mapping;state.headers=headers;
+ const required=["date","product","category","quantity","amount","location"];
+ if(required.some(k=>!mapping[k])){
+   alert("No se pudieron detectar todas las columnas. Se necesitan: fecha, producto, categoría, cantidad, venta/importe y ciudad/sede.");
+   return false;
+ }
+ const hasAmountColumn=mapping.amount&&norm(mapping.amount)!=="precio"&&norm(mapping.amount)!=="price";
+ state.rows=rows.map(r=>({
+   date:parseDate(r[mapping.date]),
+   product:String(r[mapping.product]??"Sin producto"),
+   category:String(r[mapping.category]??"Sin categoría"),
+   quantity:parseNumber(r[mapping.quantity]),
+   amount:hasAmountColumn?parseNumber(r[mapping.amount]):parseNumber(r[mapping.quantity])*parseNumber(r[mapping.amount]),
+   location:String(r[mapping.location]??"Sin sede")
+ })).filter(r=>r.date&&!isNaN(r.date));
+ return true;
+}
+function group(rows,key,metric){
+ const m=new Map();
+ rows.forEach(r=>m.set(r[key],(m.get(r[key])||0)+r[metric]));
+ return [...m.entries()].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);
+}
+function money(v){return "S/ "+Number(v).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function num(v){return Number(v).toLocaleString("es-PE")}
+function set(id,v){document.getElementById(id).textContent=v}
+
+function filteredRows(){
+ let rows=[...state.rows];
+ const y=document.getElementById("yearFilter").value;
+ const m=document.getElementById("monthFilter").value;
+ const l=document.getElementById("locationFilter").value;
+ if(y!=="all")rows=rows.filter(r=>r.date.getFullYear()==y);
+ if(m!=="all")rows=rows.filter(r=>r.date.getMonth()+1==m);
+ if(l!=="all")rows=rows.filter(r=>r.location===l);
+ return rows;
+}
+function populateFilters(){
+ const years=[...new Set(state.rows.map(r=>r.date.getFullYear()))].sort();
+ const locations=[...new Set(state.rows.map(r=>r.location))].sort();
+ document.getElementById("yearFilter").innerHTML='<option value="all">Todos</option>'+years.map(y=>`<option>${y}</option>`).join("");
+ document.getElementById("locationFilter").innerHTML='<option value="all">Todos</option>'+locations.map(x=>`<option>${escapeHtml(x)}</option>`).join("");
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function destroyCharts(){Object.values(state.charts).forEach(c=>c.destroy());state.charts={}}
+function makeChart(id,type,labels,data,label,extra={}){
+ const ctx=document.getElementById(id);
+ if(!ctx)return;
+ state.charts[id]=new Chart(ctx,{type,data:{labels,datasets:[{label,data,borderWidth:2,fill:type==="line",tension:.3,backgroundColor:["#1769ff","#6c4cff","#19a974","#f59e0b","#8b95a8","#e65f8a","#00a8cc"],borderColor:"#1769ff"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==="doughnut"}},scales:type==="doughnut"?{}:{y:{beginAtZero:true}},...extra}});
+}
+function update(){
+ state.filtered=filteredRows();const rows=state.filtered;if(!rows.length){alert("No hay datos para los filtros seleccionados.");return}
+ const total=rows.reduce((s,r)=>s+r.amount,0), qty=rows.reduce((s,r)=>s+r.quantity,0);
+ const products=group(rows,"product","quantity"),locs=group(rows,"location","amount");
+ set("totalSales",money(total));set("transactions",num(rows.length));set("productsSold",num(Math.round(qty)));
+ set("topProduct",products[0]?.label||"—");set("topProductShare",products[0]?((products[0].value/qty)*100).toFixed(1)+"% de unidades":"—");
+ set("topLocation",locs[0]?.label||"—");set("topLocationShare",locs[0]?((locs[0].value/total)*100).toFixed(1)+"% de ventas":"—");
+ destroyCharts();
+
+ const monthly=Array.from({length:12},(_,i)=>({label:months[i],value:0}));
+ rows.forEach(r=>monthly[r.date.getMonth()].value+=r.amount);
+ const cat=group(rows,"category","amount"), top=products.slice(0,10), bottom=[...products].reverse().slice(0,10);
+ const l=locs, cq=group(rows,"category","quantity");
+
+ makeChart("monthlyChart","line",monthly.map(x=>x.label),monthly.map(x=>x.value),"Ventas (S/)");
+ makeChart("categoryChart","bar",cat.map(x=>x.label),cat.map(x=>x.value),"Ventas (S/)");
+ makeChart("topProductsChart","bar",top.map(x=>x.label),top.map(x=>x.value),"Unidades",{indexAxis:"y"});
+ makeChart("bottomProductsChart","bar",bottom.map(x=>x.label),bottom.map(x=>x.value),"Unidades",{indexAxis:"y"});
+ makeChart("locationChart","bar",l.map(x=>x.label),l.map(x=>x.value),"Ventas (S/)");
+ makeChart("categoryQuantityChart","doughnut",cq.map(x=>x.label),cq.map(x=>x.value),"Unidades");
+ makeChart("locationCompareChart","bar",l.map(x=>x.label),l.map(x=>x.value),"Ventas (S/)");
+ makeChart("evolutionChart","line",monthly.map(x=>x.label),monthly.map(x=>x.value),"Ventas (S/)");
+
+ renderTables(rows,cat,products,l);
+ renderAnalysis(rows,products,cat,l);
+}
+function table(headers,rows){
+ return `<div class="table-wrap"><table class="data-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function renderTables(rows,cat,products,locs){
+ const total=rows.reduce((s,r)=>s+r.amount,0);
+ document.getElementById("summaryTable").innerHTML=table(["Indicador","Resultado"],[
+ ["Total de ventas",money(total)],["Transacciones",num(rows.length)],
+ ["Productos vendidos",num(Math.round(rows.reduce((s,r)=>s+r.quantity,0)))],
+ ["Promedio de venta",money(total/rows.length)]
+ ]);
+ document.getElementById("topFiveTable").innerHTML=table(["Producto","Unidades","%"],products.slice(0,5).map(x=>[escapeHtml(x.label),num(x.value),((x.value/rows.reduce((s,r)=>s+r.quantity,0))*100).toFixed(1)+"%"]));
+ document.getElementById("periodTable").innerHTML=table(["Mes","Ventas"],months.map((m,i)=>[m,money(rows.filter(r=>r.date.getMonth()===i).reduce((s,r)=>s+r.amount,0))]));
+ document.getElementById("categoryTable").innerHTML=table(["Categoría","Ventas"],cat.map(x=>[escapeHtml(x.label),money(x.value)]));
+ document.getElementById("productsTopTable").innerHTML=table(["Producto","Unidades"],products.slice(0,15).map(x=>[escapeHtml(x.label),num(x.value)]));
+ document.getElementById("productsBottomTable").innerHTML=table(["Producto","Unidades"],[...products].reverse().slice(0,15).map(x=>[escapeHtml(x.label),num(x.value)]));
+ document.getElementById("locationsTable").innerHTML=table(["Sede / Ciudad","Ventas"],locs.map(x=>[escapeHtml(x.label),money(x.value)]));
+}
+function renderAnalysis(rows,products,cat,locs){
+ const total=rows.reduce((s,r)=>s+r.amount,0);
+ const bestMonth=months[Array.from({length:12},(_,i)=>rows.filter(r=>r.date.getMonth()===i).reduce((s,r)=>s+r.amount,0)).reduce((a,b)=>b>a?b:a,0)];
+ const cards=[
+  ["Producto con mayor demanda",`${products[0]?.label||"N/D"} concentra la mayor cantidad de unidades vendidas.`,`Es el producto con mayor demanda y presenta riesgo de desabastecimiento si no se controla su inventario.`,`Se recomienda revisar su stock y mantener seguimiento de la demanda.`],
+  ["Categoría líder",`${cat[0]?.label||"N/D"} registra las mayores ventas monetarias (${money(cat[0]?.value||0)}).`,`La categoría concentra el mayor valor comercial y tiene un impacto importante en los ingresos.`,`Conviene priorizar inventario y acciones comerciales para esta categoría.`],
+  ["Período de mayor venta",`${bestMonth} presenta el mayor nivel de ventas dentro de los datos filtrados.`,`El comportamiento observado permite anticipar períodos de alta demanda.`,`La empresa puede preparar inventario y campañas antes de los períodos de alta demanda.`],
+  ["Sede líder",`${locs[0]?.label||"N/D"} concentra la mayor facturación (${money(locs[0]?.value||0)}).`,`La sede puede servir como referencia para comparar prácticas comerciales y operativas.`,`Analizar sus buenas prácticas y compararlas con sedes de menor rendimiento.`],
+  ["Resultado general",`El conjunto analizado representa ${money(total)} en ventas.`,`Este valor resume el rendimiento del período seleccionado y permite establecer una línea base.`,`Utilizar este resultado como línea base para comparar períodos futuros.`]
+ ];
+ document.getElementById("analysisCards").innerHTML=cards.map((c,i)=>`<article class="insight"><h3>Análisis ${i+1}: ${c[0]}</h3><p><b>Resultado:</b> ${c[1]}</p><p><b>Interpretación:</b> ${c[2]}</p><p><b>Decisión propuesta:</b> ${c[3]}</p></article>`).join("");
+}
+document.getElementById("csvFile").addEventListener("change",e=>{
+ const file=e.target.files[0];if(!file)return;
+ Papa.parse(file,{header:true,skipEmptyLines:true,dynamicTyping:false,complete:res=>{
+   if(prepare(res.data)){document.getElementById("fileStatus").textContent=file.name+" cargado";populateFilters();update()}
+ },error:err=>alert("Error leyendo CSV: "+err.message)});
+});
+document.getElementById("applyFilters").addEventListener("click",update);
+document.querySelectorAll(".nav-item").forEach(btn=>btn.addEventListener("click",()=>{
+ document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
+ document.querySelectorAll(".section").forEach(x=>x.classList.remove("active-section"));
+ btn.classList.add("active");document.getElementById(btn.dataset.section).classList.add("active-section");
+}));
+document.getElementById("downloadReport").addEventListener("click",()=>{
+ const rows=state.filtered;if(!rows.length){alert("Carga el CSV primero.");return}
+ const header="Fecha,Producto,Categoria,Cantidad,Ventas,Sede\n";
+ const csv=header+rows.map(r=>[r.date.toISOString().slice(0,10),r.product,r.category,r.quantity,r.amount,r.location].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="reporte_datastore.csv";a.click();URL.revokeObjectURL(a.href);
+});
