@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATASTORE S.A.C. | Dashboard Empresarial</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <main id="landingView" class="entry-view">
+    <nav class="landing-nav">
+      <a class="landing-brand" href="#inicio" aria-label="DATASTORE S.A.C. inicio">
+        <span class="brand-mark">◒</span>
+        <span>DATASTORE <b>S.A.C.</b></span>
+      </a>
+      <div class="landing-links">
+        <a class="landing-link active" href="#inicio">Inicio</a>
+        <a class="landing-link" href="#funcionalidades">Funcionalidades</a>
+        <a class="landing-link" href="#casos">Casos de éxito</a>
+        <a class="landing-link" href="#contacto">Contacto</a>
+        <button class="nav-login" data-open-login>Ingresar</button>
+      </div>
+    </nav>
+    <section class="landing-hero" id="inicio">
+      <div class="hero-copy">
+        <p class="eyebrow">INTELIGENCIA COMERCIAL PARA DATASTORE</p>
+        <h1>Tu portal al análisis de <span>Big Data empresarial.</span></h1>
+        <p class="hero-lede">Transforma tus datos de ventas en inteligencia para decisiones estratégicas.</p>
+        <button class="hero-action" data-open-login>Comenzar ahora <span>→</span></button>
+      </div>
+      <div class="hero-visual" aria-label="Vista previa del dashboard">
+        <div class="data-orbit orbit-one"></div><div class="data-orbit orbit-two"></div>
+        <div class="preview-window">
+          <div class="preview-bar"><i></i><i></i><i></i><span>datastore / insights</span></div>
+          <div class="preview-body"><aside></aside><div class="preview-main"><div class="preview-title"></div><div class="preview-metrics"><b></b><b></b><b></b></div><div class="preview-chart"><em></em><em></em><em></em><em></em><em></em><em></em></div><div class="preview-lower"><div></div><div></div></div></div></div>
+        </div>
+        <div class="floating-stat"><strong>+28.4%</strong><span>rendimiento comercial</span></div>
+      </div>
+    </section>
+    <section class="feature-strip" id="funcionalidades">
+      <article><span class="feature-number">01</span><div><h3>Carga inteligente</h3><p>CSV y fuentes empresariales listas para analizar.</p></div></article>
+      <article><span class="feature-number">02</span><div><h3>Procesamiento y análisis</h3><p>Ventas, productos, sedes y KPI en un solo lugar.</p></div></article>
+      <article><span class="feature-number">03</span><div><h3>Visualización y reportes</h3><p>Gráficos que convierten datos en decisiones.</p></div></article>
+    </section>
+    <section class="data-statement" id="casos"><strong>Datos</strong><span>→</span><strong>Información</strong><span>→</span><strong>Decisión</strong><p>Un flujo claro para que cada número tenga una acción detrás.</p></section>
+    <footer class="landing-footer" id="contacto"><span>DATASTORE S.A.C.</span><span>Analítica comercial · Ingeniería de datos · Decisiones</span><span>PIAD 625 · 2026</span></footer>
+  </main>
+
+  <main id="loginView" class="login-view" hidden>
+    <div class="login-backdrop"></div>
+    <section class="login-panel" aria-labelledby="loginTitle">
+      <button class="close-login" data-close-login aria-label="Volver al inicio">×</button>
+      <div class="login-brand"><span class="brand-mark">◒</span><div><strong>DATASTORE S.A.C.</strong><small>ANÁLISIS DE VENTAS</small></div></div>
+      <div class="login-divider"></div>
+      <p class="eyebrow">PORTAL EMPRESARIAL</p>
+      <h2 id="loginTitle">Ingresa al sistema</h2>
+      <form id="loginForm">
+        <label>Usuario<input id="loginUser" type="text" placeholder="Ej. J.Pérez" autocomplete="username" required></label>
+        <label>Contraseña<input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password" required></label>
+        <a class="forgot-link" href="#login">¿Olvidaste tu contraseña?</a>
+        <button class="login-submit" type="submit">Iniciar sesión</button>
+        <p id="loginMessage" class="login-message" role="status"></p>
+      </form>
+      <div class="login-or"><span></span>o inicia sesión con<span></span></div>
+      <div class="social-login"><button type="button" data-demo-login>Google</button><button type="button" data-demo-login>Microsoft</button></div>
+      <p class="register-copy">¿No tienes cuenta? <button type="button" data-demo-register>Regístrate aquí.</button></p>
+      <p class="demo-note">Acceso de demostración: completa cualquier usuario y contraseña.</p>
+    </section>
+  </main>
+
+  <div id="dashboardView" hidden>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🛒</div>
+      <div>
+        <h1>DATASTORE S.A.C.</h1>
+        <span>Dashboard Empresarial</span>
+      </div>
+    </div>
+    <div class="user-status">● Administrador · En línea</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <button class="nav-item active" data-section="inicio">⌂ <span>Inicio</span></button>
+        <button class="nav-item" data-section="resumen">▣ <span>Resumen</span></button>
+        <button class="nav-item" data-section="periodo">◷ <span>Ventas por período</span></button>
+        <button class="nav-item" data-section="categoria">▥ <span>Ventas por categoría</span></button>
+        <button class="nav-item" data-section="productos">▦ <span>Productos</span></button>
+        <button class="nav-item" data-section="sedes">⌖ <span>Sedes / Ciudades</span></button>
+        <button class="nav-item" data-section="analisis">◈ <span>Análisis</span></button>
+        <button class="nav-item" data-section="reportes">▤ <span>Reportes</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <label class="upload-button">
+          📁 Cargar ventas.csv
+          <input id="csvFile" type="file" accept=".csv">
+        </label>
+        <small id="fileStatus">Sin archivo cargado</small>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="page-heading">
+        <div>
+          <h2>Dashboard Empresarial</h2>
+          <p>Análisis y visualización de ventas - DATASTORE S.A.C.</p>
+        </div>
+
+        <div class="filters">
+          <label>Año
+            <select id="yearFilter"><option value="all">Todos</option></select>
+          </label>
+          <label>Mes
+            <select id="monthFilter">
+              <option value="all">Todos</option>
+              <option value="1">Enero</option><option value="2">Febrero</option>
+              <option value="3">Marzo</option><option value="4">Abril</option>
+              <option value="5">Mayo</option><option value="6">Junio</option>
+              <option value="7">Julio</option><option value="8">Agosto</option>
+              <option value="9">Septiembre</option><option value="10">Octubre</option>
+              <option value="11">Noviembre</option><option value="12">Diciembre</option>
+            </select>
+          </label>
+          <label>Ciudad / Sede
+            <select id="locationFilter"><option value="all">Todos</option></select>
+          </label>
+          <button id="applyFilters" class="primary-btn">🔎 Aplicar</button>
+        </div>
+      </section>
+
+      <section class="kpis">
+        <article class="kpi"><span>💰 Total de ventas</span><strong id="totalSales">S/ 0.00</strong><small>Importe acumulado</small></article>
+        <article class="kpi"><span>🧾 Transacciones</span><strong id="transactions">0</strong><small>Registros procesados</small></article>
+        <article class="kpi"><span>📦 Productos vendidos</span><strong id="productsSold">0</strong><small>Unidades</small></article>
+        <article class="kpi"><span>🏆 Producto más vendido</span><strong id="topProduct">—</strong><small id="topProductShare">—</small></article>
+        <article class="kpi"><span>📍 Sede con mayor venta</span><strong id="topLocation">—</strong><small id="topLocationShare">—</small></article>
+      </section>
+
+      <section id="inicio" class="section active-section">
+        <div class="chart-grid">
+          <article class="card wide"><h3>📅 Ventas por mes</h3><canvas id="monthlyChart"></canvas></article>
+          <article class="card"><h3>🗂️ Ventas por categoría</h3><canvas id="categoryChart"></canvas></article>
+          <article class="card"><h3>📦 Productos más vendidos</h3><canvas id="topProductsChart"></canvas></article>
+          <article class="card"><h3>📉 Productos menos vendidos</h3><canvas id="bottomProductsChart"></canvas></article>
+          <article class="card"><h3>📍 Ventas por sede / ciudad</h3><canvas id="locationChart"></canvas></article>
+          <article class="card"><h3>🥧 Productos por categoría</h3><canvas id="categoryQuantityChart"></canvas></article>
+          <article class="card"><h3>📊 Comparación de sedes</h3><canvas id="locationCompareChart"></canvas></article>
+          <article class="card"><h3>📈 Evolución de ventas</h3><canvas id="evolutionChart"></canvas></article>
+        </div>
+      </section>
+
+      <section id="resumen" class="section">
+        <div class="two-columns">
+          <article class="card">
+            <h3>Resumen general</h3>
+            <div id="summaryTable"></div>
+          </article>
+          <article class="card">
+            <h3>Top 5 Productos</h3>
+            <div id="topFiveTable"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="periodo" class="section">
+        <article class="card">
+          <h3>Ventas por período</h3>
+          <div id="periodTable"></div>
+        </article>
+      </section>
+
+      <section id="categoria" class="section">
+        <article class="card">
+          <h3>Ventas por categoría</h3>
+          <div id="categoryTable"></div>
+        </article>
+      </section>
+
+      <section id="productos" class="section">
+        <div class="two-columns">
+          <article class="card"><h3>Productos más vendidos</h3><div id="productsTopTable"></div></article>
+          <article class="card"><h3>Productos menos vendidos</h3><div id="productsBottomTable"></div></article>
+        </div>
+      </section>
+
+      <section id="sedes" class="section">
+        <article class="card">
+          <h3>Ventas por sede / ciudad</h3>
+          <div id="locationsTable"></div>
+        </article>
+      </section>
+
+      <section id="analisis" class="section">
+        <div id="analysisCards"></div>
+      </section>
+
+      <section id="reportes" class="section">
+        <article class="card">
+          <h3>📄 Reporte de análisis</h3>
+          <p>El reporte resume los indicadores y resultados obtenidos a partir de los datos cargados.</p>
+          <button id="downloadReport" class="primary-btn">⬇️ Descargar reporte CSV</button>
+        </article>
+      </section>
+
+      <footer>DATASTORE S.A.C. | Dashboard Empresarial de Ventas | Proyecto Big Data</footer>
+    </main>
+  </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
