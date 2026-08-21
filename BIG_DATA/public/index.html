@@ -203,8 +203,14 @@
       <section id="reportes" class="section">
         <article class="card">
           <h3>📄 Reporte de análisis</h3>
-          <p>El reporte resume los indicadores y resultados obtenidos a partir de los datos cargados.</p>
-          <button id="downloadReport" class="primary-btn">⬇️ Descargar reporte CSV</button>
+          <div class="report-filters">
+            <label>Año<select id="reportYearFilter"><option value="all">Todos</option></select></label>
+            <label>Mes<select id="reportMonthFilter"><option value="all">Todos</option><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></label>
+            <label>Ciudad / Sede<select id="reportLocationFilter"><option value="all">Todos</option></select></label>
+            <button id="generateReportBtn" class="primary-btn" type="button">📊 Generar reporte</button>
+          </div>
+          <div class="report-actions"><button id="downloadReportCSV" class="primary-btn" type="button">📥 CSV</button><button id="downloadReportHTML" class="primary-btn" type="button">📄 HTML</button><button id="downloadReportPDF" class="primary-btn" type="button">📑 PDF</button></div>
+          <div id="reportContent"><p class="empty">Carga un CSV y genera un reporte con los filtros seleccionados.</p></div>
         </article>
       </section>
 

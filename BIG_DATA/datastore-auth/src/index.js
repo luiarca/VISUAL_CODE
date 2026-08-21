@@ -152,6 +152,7 @@ async function login(request, env) {
 
 async function logout(request, env) {
   const token = readSessionToken(request); if (token) await env.SESSIONS.delete(token);
+  await env.datastore_db.prepare("DELETE FROM sales").run();
   return json({ success: true }, 200, { "Set-Cookie": cookieHeader("", 0) });
 }
 
@@ -207,6 +208,7 @@ async function handleApi(request, env, path) {
   if (path === "/logout" && request.method === "POST") {
     const token = readSessionToken(request);
     if (token) await env.SESSIONS.delete(token);
+    await env.datastore_db.prepare("DELETE FROM sales").run();
     return json({ success: true }, 200, { "Set-Cookie": cookieHeader("", 0) });
   }
   return null;

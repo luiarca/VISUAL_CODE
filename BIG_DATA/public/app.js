@@ -83,6 +83,8 @@ function populateFilters(){
  const locations=[...new Set(state.rows.map(r=>r.location))].sort();
  document.getElementById("yearFilter").innerHTML='<option value="all">Todos</option>'+years.map(y=>`<option>${y}</option>`).join("");
  document.getElementById("locationFilter").innerHTML='<option value="all">Todos</option>'+locations.map(x=>`<option>${escapeHtml(x)}</option>`).join("");
+ document.getElementById("reportYearFilter").innerHTML='<option value="all">Todos</option>'+years.map(y=>`<option>${y}</option>`).join("");
+ document.getElementById("reportLocationFilter").innerHTML='<option value="all">Todos</option>'+locations.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function parseCsv(text){
@@ -105,6 +107,12 @@ function parseCsv(text){
  return records.map(values=>headers.reduce((row,header,index)=>{row[header]=values[index]??"";return row},{}));
 }
 function destroyCharts(){Object.values(state.charts).forEach(c=>c.destroy());state.charts={}}
+function clearData(){
+ state.rows=[];state.filtered=[];destroyCharts();
+ ["totalSales","transactions","productsSold","topProduct","topLocation","topProductShare","topLocationShare"].forEach(id=>set(id,["topProduct","topLocation","topProductShare","topLocationShare"].includes(id)?"—":id==="totalSales"?"S/ 0.00":"0"));
+ document.getElementById("fileStatus").textContent="Sin archivo cargado";
+ document.getElementById("reportContent").innerHTML='<p class="empty">Carga un CSV y genera un reporte con los filtros seleccionados.</p>';
+}
 function makeChart(id,type,labels,data,label,extra={}){
  const ctx=document.getElementById(id);
  if(!ctx)return;
@@ -174,7 +182,7 @@ function renderAnalysis(rows,products,cat,locs){
 document.getElementById("csvFile").addEventListener("change",e=>{
  const file=e.target.files[0];if(!file)return;
  const reader=new FileReader();
- reader.onload=()=>{try{const rows=parseCsv(reader.result);if(prepare(rows)){document.getElementById("fileStatus").textContent=file.name+" cargado";populateFilters();update()}}catch(error){alert("Error leyendo CSV: "+error.message)}};
+ reader.onload=async()=>{try{const rows=parseCsv(reader.result);if(prepare(rows)){document.getElementById("fileStatus").textContent=file.name+" cargado";populateFilters();update();const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form,credentials:"same-origin"});if(!response.ok)console.error("No se pudo guardar el CSV en D1");}}catch(error){alert("Error leyendo CSV: "+error.message)}};
  reader.onerror=()=>alert("Error leyendo CSV");
  reader.readAsText(file,"UTF-8");
 });
@@ -184,13 +192,31 @@ document.querySelectorAll(".nav-item").forEach(btn=>btn.addEventListener("click"
  document.querySelectorAll(".section").forEach(x=>x.classList.remove("active-section"));
  btn.classList.add("active");document.getElementById(btn.dataset.section).classList.add("active-section");
 }));
-document.getElementById("downloadReport").addEventListener("click",()=>{
- const rows=state.filtered;if(!rows.length){alert("Carga el CSV primero.");return}
- const header="Fecha,Producto,Categoria,Cantidad,Ventas,Sede\n";
- const csv=header+rows.map(r=>[r.date.toISOString().slice(0,10),r.product,r.category,r.quantity,r.amount,r.location].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
- const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
- a.href=URL.createObjectURL(blob);a.download="reporte_datastore.csv";a.click();URL.revokeObjectURL(a.href);
+function reportRows(){
+ const year=document.getElementById("reportYearFilter").value;
+ const month=document.getElementById("reportMonthFilter").value;
+ const location=document.getElementById("reportLocationFilter").value;
+ return state.rows.filter(row=>(year==="all"||row.date.getFullYear()==year)&&(month==="all"||row.date.getMonth()+1==month)&&(location==="all"||row.location===location));
+}
+function reportHtml(rows){
+ const total=rows.reduce((sum,row)=>sum+row.amount,0),quantity=rows.reduce((sum,row)=>sum+row.quantity,0);
+ const products=group(rows,"product","quantity"), categories=group(rows,"category","amount"), locations=group(rows,"location","amount");
+ return `<div class="report-header"><h2>📊 REPORTE - DATASTORE S.A.C.</h2><p><b>Fecha:</b> ${new Date().toLocaleString("es-PE")}</p><p><b>Registros:</b> ${num(rows.length)} · <b>Ventas:</b> ${money(total)}</p></div><div class="report-kpis"><div><b>Total ventas</b><strong>${money(total)}</strong></div><div><b>Transacciones</b><strong>${num(rows.length)}</strong></div><div><b>Productos</b><strong>${num(quantity)}</strong></div><div><b>Promedio</b><strong>${money(total/(rows.length||1))}</strong></div></div><h3>Principales resultados</h3>${table(["Indicador","Resultado"],[["Producto más vendido",escapeHtml(products[0]?.label||"N/D")],["Categoría líder",escapeHtml(categories[0]?.label||"N/D")],["Sede líder",escapeHtml(locations[0]?.label||"N/D")]])}<p><b>Interpretación:</b> ${escapeHtml(products[0]?.label||"El conjunto seleccionado")} concentra la mayor demanda. Se recomienda priorizar stock y revisar la estrategia comercial de las categorías y sedes líderes.</p>`;
+}
+function generateReport(){
+ const rows=reportRows(),container=document.getElementById("reportContent");
+ if(!rows.length){container.innerHTML='<p class="empty">No hay datos para los filtros seleccionados.</p>';return}
+ container.innerHTML=reportHtml(rows);
+}
+function downloadReportFile(name,content,type){const blob=new Blob([content],{type}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=name;link.click();URL.revokeObjectURL(link.href)}
+document.getElementById("generateReportBtn").addEventListener("click",generateReport);
+document.getElementById("downloadReportCSV").addEventListener("click",()=>{
+ const rows=reportRows();if(!rows.length){alert("Carga el CSV primero.");return}
+ const csv="Fecha,Producto,Categoria,Cantidad,Ventas,Sede\n"+rows.map(row=>[row.date.toISOString().slice(0,10),row.product,row.category,row.quantity,row.amount,row.location].map(value=>`"${String(value).replace(/"/g,'""')}"`).join(",")).join("\n");
+ downloadReportFile("reporte_datastore.csv",csv,"text/csv;charset=utf-8");
 });
+document.getElementById("downloadReportHTML").addEventListener("click",()=>{const rows=reportRows();if(rows.length)downloadReportFile("reporte_datastore.html",`<!doctype html><html lang="es"><body>${reportHtml(rows)}</body></html>` ,"text/html;charset=utf-8")});
+document.getElementById("downloadReportPDF").addEventListener("click",()=>{if(reportRows().length){generateReport();window.print()}});
 
 const landingView=document.getElementById("landingView");
 const loginView=document.getElementById("loginView");
@@ -228,6 +254,7 @@ document.querySelector("[data-demo-register]").addEventListener("click",()=>{
 });
 document.getElementById("logoutButton").addEventListener("click",async()=>{
  await fetch("/logout",{method:"POST",credentials:"same-origin"});
+ clearData();
  showView(landingView);
 });
 fetch("/me",{credentials:"same-origin"}).then(async response=>{
