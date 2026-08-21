@@ -155,7 +155,13 @@ function renderTables(rows,cat,products,locs){
 }
 function renderAnalysis(rows,products,cat,locs){
  const total=rows.reduce((s,r)=>s+r.amount,0);
- const bestMonth=months[Array.from({length:12},(_,i)=>rows.filter(r=>r.date.getMonth()===i).reduce((s,r)=>s+r.amount,0)).reduce((a,b)=>b>a?b:a,0)];
+  const monthlyTotals = Array.from({length:12}, (_,i) =>
+    rows.filter(r => r.date.getMonth() === i).reduce((s,r) => s + r.amount, 0)
+  );
+  const maxVenta = Math.max(...monthlyTotals);
+  const bestMonthIndex = monthlyTotals.indexOf(maxVenta);
+  const bestMonth = (maxVenta > 0) ? months[bestMonthIndex] : "Sin datos en el período";
+  
  const cards=[
   ["Producto con mayor demanda",`${products[0]?.label||"N/D"} concentra la mayor cantidad de unidades vendidas.`,`Es el producto con mayor demanda y presenta riesgo de desabastecimiento si no se controla su inventario.`,`Se recomienda revisar su stock y mantener seguimiento de la demanda.`],
   ["Categoría líder",`${cat[0]?.label||"N/D"} registra las mayores ventas monetarias (${money(cat[0]?.value||0)}).`,`La categoría concentra el mayor valor comercial y tiene un impacto importante en los ingresos.`,`Conviene priorizar inventario y acciones comerciales para esta categoría.`],
@@ -200,18 +206,33 @@ document.querySelectorAll("[data-open-login]").forEach(button=>button.addEventLi
  showView(loginView);document.getElementById("loginUser").focus();
 }));
 document.querySelector("[data-close-login]").addEventListener("click",()=>showView(landingView));
-document.getElementById("loginForm").addEventListener("submit",event=>{
+document.getElementById("loginForm").addEventListener("submit",async event=>{
  event.preventDefault();
  const user=document.getElementById("loginUser").value.trim();
- const password=document.getElementById("loginPassword").value.trim();
+ const password=document.getElementById("loginPassword").value;
  if(!user||!password){loginMessage.textContent="Completa tu usuario y contraseña.";return}
- loginMessage.textContent="";showView(dashboardView);
+ loginMessage.textContent="Verificando acceso...";
+ try{
+  const response=await fetch("/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({username:user,password})});
+  const result=await response.json();
+  if(!response.ok){loginMessage.textContent=result.error||"No se pudo iniciar sesión.";return}
+  document.getElementById("sessionUser").textContent=`● ${result.user} · En línea`;
+  loginMessage.textContent="";showView(dashboardView);
+ }catch{loginMessage.textContent="No se pudo conectar con el servicio de autenticación."}
 });
 document.querySelectorAll("[data-demo-login]").forEach(button=>button.addEventListener("click",()=>{
- document.getElementById("loginUser").value=button.textContent.trim();
- document.getElementById("loginPassword").value="demo";
- document.getElementById("loginForm").requestSubmit();
+ loginMessage.textContent="Usa las credenciales creadas en D1 para ingresar.";
 }));
 document.querySelector("[data-demo-register]").addEventListener("click",()=>{
- loginMessage.textContent="El registro estará disponible en la versión con autenticación empresarial.";
+ loginMessage.textContent="El registro se gestiona mediante el servicio seguro de DATASTORE.";
 });
+document.getElementById("logoutButton").addEventListener("click",async()=>{
+ await fetch("/logout",{method:"POST",credentials:"same-origin"});
+ showView(landingView);
+});
+fetch("/me",{credentials:"same-origin"}).then(async response=>{
+ if(!response.ok)return;
+ const result=await response.json();
+ document.getElementById("sessionUser").textContent=`● ${result.user} · En línea`;
+ showView(dashboardView);
+}).catch(()=>{});
