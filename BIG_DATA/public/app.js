@@ -201,6 +201,15 @@ function showView(view){
  loginView.hidden=view!==loginView;
  dashboardView.hidden=view!==dashboardView;
  window.scrollTo({top:0,behavior:"smooth"});
+ if(view===dashboardView&&!state.rows.length)loadDefaultData();
+}
+async function loadDefaultData(){
+ try{
+  const response=await fetch("/ventas.csv",{cache:"no-store"});
+  if(!response.ok)throw new Error("No se pudo cargar el dataset inicial");
+  const rows=parseCsv(await response.text());
+  if(prepare(rows)){document.getElementById("fileStatus").textContent="ventas.csv cargado automáticamente";populateFilters();update()}
+ }catch(error){document.getElementById("fileStatus").textContent="Carga manual requerida";console.error(error)}
 }
 document.querySelectorAll("[data-open-login]").forEach(button=>button.addEventListener("click",()=>{
  showView(loginView);document.getElementById("loginUser").focus();
