@@ -27,21 +27,21 @@
       <div class="hero-copy">
         <p class="eyebrow">INTELIGENCIA COMERCIAL PARA DATASTORE</p>
         <h1>Tu portal al análisis de <span>Big Data empresarial.</span></h1>
-        <p class="hero-lede">Transforma tus datos de ventas en inteligencia para decisiones estratégicas.</p>
+        <p class="hero-lede">Transforma tus datos de ventas en inteligencia para decisiones estratégicas. Ahora con panel en tiempo real, MongoDB y HDFS.</p>
         <button class="hero-action" data-open-login>Comenzar ahora <span>→</span></button>
       </div>
       <div class="hero-visual" aria-label="Vista previa del dashboard">
         <div class="data-orbit orbit-one"></div><div class="data-orbit orbit-two"></div>
         <div class="preview-window">
-          <div class="preview-bar"><i></i><i></i><i></i><span>datastore / insights</span></div>
+          <div class="preview-bar"><i></i><i></i><i></i><span>datastore / insights — live</span></div>
           <div class="preview-body"><aside></aside><div class="preview-main"><div class="preview-title"></div><div class="preview-metrics"><b></b><b></b><b></b></div><div class="preview-chart"><em></em><em></em><em></em><em></em><em></em><em></em></div><div class="preview-lower"><div></div><div></div></div></div></div>
         </div>
         <div class="floating-stat"><strong>+28.4%</strong><span>rendimiento comercial</span></div>
       </div>
     </section>
     <section class="feature-strip" id="funcionalidades">
-      <article><span class="feature-number">01</span><div><h3>Carga inteligente</h3><p>CSV y fuentes empresariales listas para analizar.</p></div></article>
-      <article><span class="feature-number">02</span><div><h3>Procesamiento y análisis</h3><p>Ventas, productos, sedes y KPI en un solo lugar.</p></div></article>
+      <article><span class="feature-number">01</span><div><h3>Carga inteligente</h3><p>CSV, MongoDB y HDFS listos para analizar.</p></div></article>
+      <article><span class="feature-number">02</span><div><h3>Panel interactivo 5 cuadros</h3><p>Tiempo real, filtros cruzados y decisiones sólidas.</p></div></article>
       <article><span class="feature-number">03</span><div><h3>Visualización y reportes</h3><p>Gráficos que convierten datos en decisiones.</p></div></article>
     </section>
     <section class="data-statement" id="casos"><strong>Datos</strong><span>→</span><strong>Información</strong><span>→</span><strong>Decisión</strong><p>Un flujo claro para que cada número tenga una acción detrás.</p></section>
@@ -77,7 +77,7 @@
       <div class="brand-icon">🛒</div>
       <div>
         <h1>DATASTORE S.A.C.</h1>
-        <span>Dashboard Empresarial</span>
+        <span>Dashboard Empresarial · MongoDB + HDFS</span>
       </div>
     </div>
     <div class="user-status"><span id="sessionUser">● Sesión activa</span> <button id="logoutButton" class="logout-button" type="button">Cerrar sesión</button></div>
@@ -86,7 +86,8 @@
   <div class="layout">
     <aside class="sidebar">
       <nav>
-        <button class="nav-item active" data-section="inicio">⌂ <span>Inicio</span></button>
+        <button class="nav-item active" data-section="panel">⚡ <span>Panel Interactivo</span></button>
+        <button class="nav-item" data-section="inicio">⌂ <span>Inicio</span></button>
         <button class="nav-item" data-section="resumen">▣ <span>Resumen</span></button>
         <button class="nav-item" data-section="periodo">◷ <span>Ventas por período</span></button>
         <button class="nav-item" data-section="categoria">▥ <span>Ventas por categoría</span></button>
@@ -102,6 +103,7 @@
           <input id="csvFile" type="file" accept=".csv">
         </label>
         <small id="fileStatus">Sin archivo cargado</small>
+        <button id="demoLoadBtn" type="button" class="demo-load-btn">⚡ Cargar demo (sin archivo)</button>
       </div>
     </aside>
 
@@ -109,7 +111,7 @@
       <section class="page-heading">
         <div>
           <h2>Dashboard Empresarial</h2>
-          <p>Análisis y visualización de ventas - DATASTORE S.A.C.</p>
+          <p>Análisis y visualización de ventas — Panel interactivo en tiempo real</p>
         </div>
 
         <div class="filters">
@@ -134,6 +136,209 @@
         </div>
       </section>
 
+      <!-- ========= PANEL INTERACTIVO 5 CUADROS ========= -->
+      <section id="panel" class="section active-section">
+
+        <!-- Barra de filtros avanzados -->
+        <div class="panel-toolbar">
+          <div class="panel-toolbar-header">
+            <h3>⚡ Panel Interactivo — 5 Cuadros Reactivos</h3>
+            <div class="live-controls">
+              <span id="liveDot" class="live-dot"></span>
+              <span id="liveLabel">Tiempo real: OFF</span>
+              <label class="live-switch"><input type="checkbox" id="liveToggle"><span>Activar</span></label>
+              <span id="lastUpdate" class="last-update">—</span>
+            </div>
+          </div>
+
+          <div class="advanced-filters">
+            <label class="af-wide">🔍 Búsqueda global
+              <input id="fText" type="text" placeholder="Producto, categoría, ciudad...">
+            </label>
+            <label>Categoría
+              <select id="fCategory"><option value="all">Todas</option></select>
+            </label>
+            <label>Ciudad
+              <select id="fCity"><option value="all">Todas</option></select>
+            </label>
+            <label>Producto
+              <select id="fProduct"><option value="all">Todos</option></select>
+            </label>
+            <label>Mes (panel)
+              <select id="fMonth">
+                <option value="all">Todos</option>
+                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Sept</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dic</option>
+              </select>
+            </label>
+            <label>Año (panel)
+              <select id="fYear"><option value="all">Todos</option></select>
+            </label>
+            <label>Orden
+              <select id="fSort">
+                <option value="mas_ventas">Más ventas (S/)</option>
+                <option value="menos_ventas">Menos ventas (S/)</option>
+                <option value="mas_unidades">Más unidades</option>
+                <option value="menos_unidades">Menos unidades</option>
+                <option value="mayor_precio">Mayor precio</option>
+                <option value="menor_precio">Menor precio</option>
+                <option value="az">A → Z</option>
+              </select>
+            </label>
+            <label>Top N
+              <select id="fTopN">
+                <option value="5">Top 5</option>
+                <option value="8">Top 8</option>
+                <option value="10" selected>Top 10</option>
+                <option value="15">Top 15</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="extra-filters">
+            <label>📅 Fecha desde
+              <input id="fDateFrom" type="date">
+            </label>
+            <label>📅 Fecha hasta
+              <input id="fDateTo" type="date">
+            </label>
+            <label>📊 Trimestre
+              <select id="fQuarter"><option value="all">Todos</option><option value="1">Q1 (Ene-Mar)</option><option value="2">Q2 (Abr-Jun)</option><option value="3">Q3 (Jul-Sep)</option><option value="4">Q4 (Oct-Dic)</option></select>
+            </label>
+            <label>📆 Día semana
+              <select id="fWeekday"><option value="all">Todos</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="0">Domingo</option></select>
+            </label>
+            <label>🏷️ Ranking
+              <select id="fRankMode">
+                <option value="mas">Más comprados</option>
+                <option value="menos">Menos comprados</option>
+              </select>
+            </label>
+            <label>📦 Stock / Métrica
+              <select id="fMetric"><option value="ventas">Ventas (S/)</option><option value="unidades">Unidades</option><option value="tickets">Tickets</option></select>
+            </label>
+          </div>
+
+          <div class="advanced-ranges">
+            <div class="range-group">
+              <label>💲 Precio unitario: <b id="fPriceLabel">0 — 6000</b></label>
+              <div class="dual-range">
+                <input id="fPriceMin" type="range" min="0" max="6000" step="10" value="0">
+                <input id="fPriceMax" type="range" min="0" max="6000" step="10" value="6000">
+              </div>
+              <div class="range-inputs">
+                <input id="fPriceMinNum" type="number" min="0" max="6000" value="0"> — <input id="fPriceMaxNum" type="number" min="0" max="6000" value="6000">
+              </div>
+            </div>
+            <div class="range-group">
+              <label>📦 Cantidad por ticket: <b id="fQtyLabel">1 — 20</b></label>
+              <div class="dual-range">
+                <input id="fQtyMin" type="range" min="1" max="20" step="1" value="1">
+                <input id="fQtyMax" type="range" min="1" max="20" step="1" value="20">
+              </div>
+              <div class="range-inputs">
+                <input id="fQtyMinNum" type="number" min="1" max="20" value="1"> — <input id="fQtyMaxNum" type="number" min="1" max="20" value="20">
+              </div>
+            </div>
+            <div class="range-group">
+              <label>🧾 Venta total (S/): <b id="fAmountLabel">0 — 120k</b></label>
+              <div class="dual-range">
+                <input id="fAmountMin" type="range" min="0" max="120000" step="500" value="0">
+                <input id="fAmountMax" type="range" min="0" max="120000" step="500" value="120000">
+              </div>
+              <div class="range-inputs">
+                <input id="fAmountMinNum" type="number" min="0" max="120000" value="0"> — <input id="fAmountMaxNum" type="number" value="120000">
+              </div>
+            </div>
+          </div>
+
+          <div id="activeChips" class="active-filters"></div>
+
+          <div class="filter-actions">
+            <span id="filterCount" class="filter-count">0 registros filtrados</span>
+            <button id="resetFilters" class="ghost-btn" type="button">↺ Limpiar todo</button>
+            <button id="exportPanelCSV" class="primary-btn" type="button">📥 Exportar filtrados (CSV)</button>
+          </div>
+        </div>
+
+        <!-- 5 CUADROS -->
+        <div class="panel-grid-5">
+
+          <!-- CUADRO 1: KPIs reactivos -->
+          <article class="panel-card cuadro cuadro-kpi">
+            <div class="cuadro-head">
+              <h4>📊 Cuadro 1 — KPIs Reactivos</h4>
+              <span class="cuadro-badge">tiempo real</span>
+            </div>
+            <div class="kpi-reactive">
+              <div><small>Total ventas</small><strong id="pTotalSales">S/ 0.00</strong><span id="pTotalSalesDelta" class="delta">—</span></div>
+              <div><small>Transacciones</small><strong id="pTransactions">0</strong><span id="pTransDelta" class="delta">—</span></div>
+              <div><small>Ticket promedio</small><strong id="pAvgSale">S/ 0.00</strong><span id="pAvgDelta" class="delta">—</span></div>
+              <div><small>Unidades</small><strong id="pQty">0</strong><span id="pQtyDelta" class="delta">—</span></div>
+              <div><small>Precio prom.</small><strong id="pAvgPrice">S/ 0.00</strong><span id="pPriceDelta" class="delta">—</span></div>
+              <div><small>Ciudades activas</small><strong id="pCities">0</strong><span>sedes</span></div>
+            </div>
+            <canvas id="kpiSpark" height="60"></canvas>
+            <div class="insight-mini" id="kpiInsight">Carga datos para ver insights empresariales.</div>
+          </article>
+
+          <!-- CUADRO 2: Tendencia temporal -->
+          <article class="panel-card cuadro cuadro-tendencia">
+            <div class="cuadro-head">
+              <h4>📈 Cuadro 2 — Tendencia & Estacionalidad</h4>
+              <select id="trendMode">
+                <option value="month">Por mes</option>
+                <option value="category">Por categoría (mes)</option>
+              </select>
+            </div>
+            <canvas id="panelTrendChart"></canvas>
+            <div class="cuadro-foot">
+              <span id="trendBestMonth">Mejor mes: —</span>
+              <span id="trendProjection">Proyección próximo mes: —</span>
+            </div>
+          </article>
+
+          <!-- CUADRO 3: Ranking -->
+          <article class="panel-card cuadro cuadro-ranking">
+            <div class="cuadro-head">
+              <h4>🏆 Cuadro 3 — Ranking Competitivo</h4>
+              <span id="rankingSubtitle" class="cuadro-badge">Top 10 · Más ventas</span>
+            </div>
+            <canvas id="panelRankingChart"></canvas>
+            <div id="rankingTable" class="mini-table"></div>
+          </article>
+
+          <!-- CUADRO 4: Geográfico -->
+          <article class="panel-card cuadro cuadro-geo">
+            <div class="cuadro-head">
+              <h4>📍 Cuadro 4 — Inteligencia Geográfica</h4>
+              <select id="geoMode">
+                <option value="city">Por ciudad</option>
+                <option value="category">Por categoría</option>
+              </select>
+            </div>
+            <canvas id="panelGeoChart"></canvas>
+            <div id="geoTable" class="mini-table"></div>
+          </article>
+
+          <!-- CUADRO 5: Precio -->
+          <article class="panel-card cuadro cuadro-precio">
+            <div class="cuadro-head">
+              <h4>💲 Cuadro 5 — Análisis de Precio</h4>
+              <span class="cuadro-badge" id="priceBadge">—</span>
+            </div>
+            <canvas id="panelPriceChart"></canvas>
+            <canvas id="panelScatterChart" height="140"></canvas>
+            <div id="priceStats" class="price-stats"></div>
+          </article>
+
+        </div>
+
+        <div class="panel-insights">
+          <h4>🧠 Insights automáticos (según filtros)</h4>
+          <div id="panelInsights" class="insights-grid"></div>
+        </div>
+      </section>
+
       <section class="kpis">
         <article class="kpi"><span>💰 Total de ventas</span><strong id="totalSales">S/ 0.00</strong><small>Importe acumulado</small></article>
         <article class="kpi"><span>🧾 Transacciones</span><strong id="transactions">0</strong><small>Registros procesados</small></article>
@@ -142,7 +347,7 @@
         <article class="kpi"><span>📍 Sede con mayor venta</span><strong id="topLocation">—</strong><small id="topLocationShare">—</small></article>
       </section>
 
-      <section id="inicio" class="section active-section">
+      <section id="inicio" class="section">
         <div class="chart-grid">
           <article class="card wide"><h3>📅 Ventas por mes</h3><canvas id="monthlyChart"></canvas></article>
           <article class="card"><h3>🗂️ Ventas por categoría</h3><canvas id="categoryChart"></canvas></article>
@@ -214,7 +419,7 @@
         </article>
       </section>
 
-      <footer>DATASTORE S.A.C. | Dashboard Empresarial de Ventas | Proyecto Big Data</footer>
+      <footer>DATASTORE S.A.C. | Dashboard Empresarial de Ventas | Proyecto Big Data · MongoDB + HDFS</footer>
     </main>
   </div>
 

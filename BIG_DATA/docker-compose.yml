@@ -1,0 +1,104 @@
+# DATASTORE S.A.C. - Stack 100% Docker (sin Cloudflare)
+# Lanzamiento: docker compose up --build -d
+# Windows y CachyOS: mismos comandos, requiere Docker Desktop (Win) o docker engine (CachyOS)
+# Acceso: http://localhost:3000  | Mongo Express: http://localhost:8081 | HDFS UI: http://localhost:9870
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: datastore-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: datastore
+      MONGO_INITDB_ROOT_PASSWORD: datastore123
+      MONGO_INITDB_DATABASE: datastore
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: datastore-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: datastore
+      ME_CONFIG_MONGODB_ADMINPASSWORD: datastore123
+      ME_CONFIG_MONGODB_URL: mongodb://datastore:datastore123@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # Backend Node.js - sirve frontend + API (reemplaza Cloudflare Worker + D1/KV)
+  backend:
+    build: ./backend
+    container_name: datastore-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGO_URL: mongodb://datastore:datastore123@mongodb:27017/datastore?authSource=admin
+      NODE_ENV: production
+    volumes:
+      - ./public:/app/public:ro
+      - ./ventas.csv:/app/ventas.csv:ro
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: datastore-namenode
+    restart: unless-stopped
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=datastore
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+      - ./ventas.csv:/tmp/ventas.csv:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9870/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datastore-datanode
+    restart: unless-stopped
+    ports:
+      - "9864:9864"
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+    depends_on:
+      namenode:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  namenode_data:
+  datanode_data:

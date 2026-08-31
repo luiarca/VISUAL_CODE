@@ -1,0 +1,10 @@
+db = db.getSiblingDB('datastore');
+db.createCollection('sales');
+db.createCollection('users');
+db.sales.createIndex({ date: 1 });
+db.sales.createIndex({ city: 1 });
+db.sales.createIndex({ category: 1 });
+db.sales.createIndex({ product: 1 });
+db.sales.createIndex({ price: 1 });
+db.sales.createIndex({ location: 1 });
+print("✅ MongoDB datastore inicializado: colecciones sales, users + índices");
